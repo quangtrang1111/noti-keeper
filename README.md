@@ -7,7 +7,7 @@ Messenger, Gmail, WhatsApp, banking apps and many others often arrive late, in a
 unlock the phone or toggle Wi‑Fi. Noti Keeper fixes that for every app at once by keeping Google's
 shared push channel (FCM) alive.
 
-[![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/quangtrang1111)
+[![Support me on Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/quangtrang1111/?hidefeed=true&widget=true&embed=true)
 
 ## Why Noti Keeper
 
@@ -61,8 +61,7 @@ list (at boot, on cloud config updates and on any battery setting change) and dr
 
 Noti Keeper re-adds GMS to that list on every check, at boot and whenever you open the app. Once
 GMS is protected, its own heartbeat keeps the connection alive, so Noti Keeper skips the extra
-heartbeat to save battery. A 5-minute interval is recommended on HyperOS China.
-Background: [hyperos-fcm-fix](https://github.com/dingwen07/hyperos-fcm-fix).
+heartbeat to save battery.
 
 Oppo, vivo and other brands have no writable equivalent of this list. On those phones you set
 Google Play Services' battery to Unrestricted by hand, and the app opens that screen for you.
@@ -119,7 +118,7 @@ and signed by GitHub Actions when a new `versionName` is merged into `main`.
 ## Support
 
 If Noti Keeper saves your notifications, you can
-[buy me a coffee on Ko-fi](https://ko-fi.com/quangtrang1111). Thank you!
+[buy me a coffee on Ko-fi](https://ko-fi.com/quangtrang1111/?hidefeed=true&widget=true&embed=true). Thank you!
 
 ## License
 

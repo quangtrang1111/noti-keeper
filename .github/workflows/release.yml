@@ -5,7 +5,7 @@ name: Release APK
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', 'LICENSE']
+    paths: ['app/**']
 
 permissions:
   contents: write

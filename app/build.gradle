@@ -12,7 +12,7 @@ android {
         // Must stay below 23 for XiaomiGuard to write a private Settings.System key.
         targetSdk 22
         versionCode 4
-        versionName '1.3'
+        versionName '1.4'
     }
 
     lint {

@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
     private static final int BTN_CHECK = 101, BTN_WRITE_SETTINGS = 102, BTN_BATTERY = 103,
             BTN_AUTOSTART = 104, BTN_GMS = 105, BTN_DONATE = 106;
 
-    private static final String DONATE_URL = "https://ko-fi.com/quangtrang1111";
+    private static final String DONATE_URL = "https://ko-fi.com/quangtrang1111/?hidefeed=true&widget=true&embed=true";
 
     private TextView status;
 
