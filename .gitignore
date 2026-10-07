@@ -1,0 +1,40 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local SDK path / machine config
+local.properties
+
+# Android build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing keys (never commit)
+*.jks
+*.keystore
+keystore.properties
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.kotlin/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Logs / temp
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
