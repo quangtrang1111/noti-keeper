@@ -1,6 +1,6 @@
 # Noti Keeper
 
-**Get your notifications on time on Chinese Android ROMs.**
+**Get your notifications on time on Chinese Android ROMs.** 
 
 On Xiaomi HyperOS/MIUI, Oppo ColorOS, vivo OriginOS and other Chinese ROMs, notifications from
 Messenger, Gmail, WhatsApp, banking apps and many others often arrive late, in a burst when you
