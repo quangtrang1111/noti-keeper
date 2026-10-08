@@ -36,7 +36,7 @@ final class Rom {
 
     static String setupButton(Context c) {
         return XiaomiGuard.check(c, false) != XiaomiGuard.NOT_APPLICABLE
-                ? "Allow \"Modify system settings\"" : null;
+                ? "3. Allow \"Modify system settings\"" : null;
     }
 
     static Intent setupIntent(Context c) {

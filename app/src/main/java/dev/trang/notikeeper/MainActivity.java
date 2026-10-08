@@ -58,8 +58,8 @@ public class MainActivity extends Activity implements View.OnClickListener,
         status.setPadding(0, dp(8), 0, dp(8));
 
         button(root, BTN_CHECK, "Check now");
-        button(root, BTN_BATTERY, "Battery: allow running on time");
-        button(root, BTN_AUTOSTART, "Autostart settings");
+        button(root, BTN_BATTERY, "1. Battery: allow running on time");
+        button(root, BTN_AUTOSTART, "2. Autostart settings");
         String romButton = Rom.setupButton(this);
         if (romButton != null) button(root, BTN_ROM, romButton);
         Button donate = button(root, BTN_DONATE, "Love this app? Buy me a coffee!");

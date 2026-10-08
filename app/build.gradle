@@ -10,7 +10,7 @@ android {
         applicationId 'dev.trang.notikeeper'
         minSdk 24
         versionCode 4
-        versionName '2.0'
+        versionName '2.1'
     }
 
     // Same applicationId: users install one build or the other, never both.

@@ -87,16 +87,20 @@ you.
 
 ## Install and set up
 
-1. Download [the right APK](#which-apk-do-i-need) from [Releases](../../releases), install it and
-   open it once. If the Xiaomi APK fails with **"Couldn't install (-29)"**, see
-   [Installing on Android 14+](#installing-on-android-14).
-2. Tap **Battery: allow running on time** and allow it.
-3. Tap **Autostart settings** and enable Noti Keeper. Also lock it in Recents if your ROM
-   supports it, because a cleared or frozen app loses its alarms on Chinese ROMs.
-4. **Xiaomi build:** tap **Allow "Modify system settings"**. The status should then show
-   "HyperOS no-freeze list: GMS protected".
-5. **Universal build:** tap **Google Play Services: battery & autostart** and set it to
-   Unrestricted / allow background activity / allow auto launch.
+Download [the right APK](#which-apk-do-i-need) from [Releases](../../releases), install it and
+open it. If the Xiaomi APK fails with **"Couldn't install (-29)"**, see
+[Installing on Android 14+](#installing-on-android-14).
+
+Then tap the numbered buttons in order, once:
+
+1. **Battery: allow running on time**: allow it.
+2. **Autostart settings**: enable Noti Keeper. Also lock it in Recents if your ROM supports it,
+   because a cleared or frozen app loses its alarms on Chinese ROMs.
+3. Depends on your build:
+   - **Xiaomi build: Allow "Modify system settings"**: turn it on. The status should then show
+     "HyperOS no-freeze list: GMS protected".
+   - **Universal build: Google Play Services: battery & autostart**: set it to Unrestricted /
+     allow background activity / allow auto launch.
 
 The app shows "Keeping your notifications on time. Next check: …" plus the last check. Dial `*#*#426#*#*` to see whether the push connection
 stays up.

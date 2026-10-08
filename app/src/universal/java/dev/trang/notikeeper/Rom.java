@@ -49,7 +49,7 @@ final class Rom {
 
     /** No writable no-freeze list: the user sets GMS battery to unrestricted by hand. */
     static String setupButton(Context c) {
-        return "Google Play Services: battery & autostart";
+        return "3. Google Play Services: battery & autostart";
     }
 
     static Intent setupIntent(Context c) {
