@@ -62,7 +62,9 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
-          cp app/build/outputs/apk/release/app-release.apk "NotiKeeper-${{ steps.version.outputs.tag }}.apk"
+          for rom in xiaomi universal; do
+            cp "app/build/outputs/apk/$rom/release/app-$rom-release.apk" "NotiKeeper-$rom-${{ steps.version.outputs.tag }}.apk"
+          done
 
       - name: Publish release
         if: steps.version.outputs.exists != 'true'
@@ -70,5 +72,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          gh release create "$TAG" "NotiKeeper-$TAG.apk" \
+          gh release create "$TAG" NotiKeeper-*-"$TAG".apk \
             --target "$GITHUB_SHA" --title "Noti Keeper $TAG" --generate-notes

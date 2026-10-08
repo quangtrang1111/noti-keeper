@@ -9,10 +9,23 @@ android {
     defaultConfig {
         applicationId 'dev.trang.notikeeper'
         minSdk 24
-        // Must stay below 23 for XiaomiGuard to write a private Settings.System key.
-        targetSdk 22
         versionCode 4
-        versionName '1.4'
+        versionName '2.0'
+    }
+
+    // Same applicationId: users install one build or the other, never both.
+    flavorDimensions = ['rom']
+    productFlavors {
+        xiaomi {
+            dimension 'rom'
+            // Must stay below 23 for XiaomiGuard to write a private Settings.System key.
+            targetSdk 22
+        }
+        universal {
+            dimension 'rom'
+            // Below 28, Android 14+ warns "built for an older version of Android".
+            targetSdk 28
+        }
     }
 
     lint {

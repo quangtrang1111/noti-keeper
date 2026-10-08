@@ -13,16 +13,15 @@ import android.os.SystemClock;
 /**
  * Every tick we poke GMS's push client: GCM_RECONNECT reconnects a dead socket, and a heartbeat
  * detects a silently dropped one. GMS doesn't protect these broadcasts with a permission.
+ * ROM-specific behavior lives in each flavor's {@link Rom}.
  */
 final class KeepAlive {
     static final String ACTION_TICK = "dev.trang.notikeeper.TICK";
     static final String GMS = "com.google.android.gms";
-    static final int[] INTERVALS_MIN = {5, 10, 15, 20, 30};
 
     private static final String GCM_RECONNECT = "com.google.android.intent.action.GCM_RECONNECT";
     private static final String MCS_HEARTBEAT = "com.google.android.intent.action.MCS_HEARTBEAT";
     private static final String HEARTBEAT_NOW = "com.google.android.gms.gcm.ACTION_HEARTBEAT_NOW";
-    private static final int DEFAULT_INTERVAL_MIN = 10;
 
     /** True while MainActivity is on screen; the process must not exit then. */
     static volatile boolean uiVisible;
@@ -47,26 +46,32 @@ final class KeepAlive {
         return prefs(c).getBoolean("enabled", true);
     }
 
-    static int intervalMin(Context c) {
-        return prefs(c).getInt("interval", DEFAULT_INTERVAL_MIN);
-    }
-
     static void setEnabled(Context c, boolean on) {
         prefs(c).edit().putBoolean("enabled", on).apply();
-        schedule(c);
+        arm(c);
     }
 
-    static void setInterval(Context c, int minutes) {
-        prefs(c).edit().putInt("interval", minutes).apply();
-        schedule(c);
+    /** Arms (or disarms) the alarm and any ROM trigger. Safe to call repeatedly. */
+    static void arm(Context c) {
+        boolean on = isEnabled(c);
+        Rom.arm(c, on);
+        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pi = PendingIntent.getBroadcast(c, 0,
+                new Intent(c, KeepAliveReceiver.class).setAction(ACTION_TICK),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        if (!on) {
+            am.cancel(pi);
+            prefs(c).edit().remove("nextWall").apply();
+            return;
+        }
+        long delay = Rom.intervalMin(c) * 60_000L;
+        am.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + delay, pi);
+        prefs(c).edit().putLong("nextWall", System.currentTimeMillis() + delay).apply();
     }
 
-    /**
-     * The heartbeat wakes the radio, so skip it when GMS was already unfrozen on HyperOS:
-     * it then keeps the connection alive by itself.
-     */
     static void ping(Context c, boolean forceHeartbeat) {
-        boolean heartbeat = forceHeartbeat || XiaomiGuard.check(c, true) != XiaomiGuard.PROTECTED;
+        boolean heartbeat = Rom.needsHeartbeat(c) || forceHeartbeat;
         send(c, GCM_RECONNECT);
         if (heartbeat) {
             send(c, MCS_HEARTBEAT);
@@ -77,22 +82,5 @@ final class KeepAlive {
 
     private static void send(Context c, String action) {
         c.sendBroadcast(new Intent(action).setPackage(GMS));
-    }
-
-    /** Exact alarms need no permission at targetSdk 22. */
-    static void schedule(Context c) {
-        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pi = PendingIntent.getBroadcast(c, 0,
-                new Intent(c, KeepAliveReceiver.class).setAction(ACTION_TICK),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        if (!isEnabled(c)) {
-            am.cancel(pi);
-            prefs(c).edit().remove("nextWall").apply();
-            return;
-        }
-        long delay = intervalMin(c) * 60_000L;
-        am.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + delay, pi);
-        prefs(c).edit().putLong("nextWall", System.currentTimeMillis() + delay).apply();
     }
 }

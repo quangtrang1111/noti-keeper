@@ -10,11 +10,11 @@ public class KeepAliveReceiver extends BroadcastReceiver {
     public void onReceive(Context c, Intent intent) {
         String action = intent.getAction();
         if (KeepAlive.isEnabled(c)) {
-            // PowerKeeper rebuilds the no-freeze list at boot, so repair right away.
+            // ROM triggers don't survive a reboot, and PowerKeeper rebuilds the no-freeze list at boot.
             if (KeepAlive.ACTION_TICK.equals(action) || Intent.ACTION_BOOT_COMPLETED.equals(action)) {
                 KeepAlive.ping(c, false);
             }
-            KeepAlive.schedule(c);
+            KeepAlive.arm(c);
         }
         KeepAlive.exitSoon();
     }

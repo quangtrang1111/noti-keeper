@@ -2,12 +2,13 @@ package dev.trang.notikeeper;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 
 /**
  * HyperOS China freezes GMS after screen-off, killing the FCM socket. Apps in MILLET_NO_RESTRICT_APP
- * are never frozen, but PowerKeeper keeps dropping GMS from it, so we re-add it every tick.
+ * are never frozen, but PowerKeeper keeps dropping GMS from it, so we re-add it whenever it changes.
  * Needs WRITE_SETTINGS and targetSdk < 23. See https://github.com/dingwen07/hyperos-fcm-fix
  */
 final class XiaomiGuard {
@@ -16,6 +17,7 @@ final class XiaomiGuard {
     /** Redmi and POCO devices also report "Xiaomi". */
     static final boolean IS_XIAOMI = "xiaomi".equalsIgnoreCase(Build.MANUFACTURER);
     private static final String KEY = "MILLET_NO_RESTRICT_APP";
+    static final Uri URI = Settings.System.getUriFor(KEY);
 
     private XiaomiGuard() {}
 
@@ -35,5 +37,10 @@ final class XiaomiGuard {
         } catch (Exception e) {
             return NOT_APPLICABLE;
         }
+    }
+
+    /** GMS was probably frozen with a dead socket, so reconnect it right after a repair. */
+    static void repair(Context c) {
+        if (check(c, true) == REPAIRED) KeepAlive.ping(c, true);
     }
 }

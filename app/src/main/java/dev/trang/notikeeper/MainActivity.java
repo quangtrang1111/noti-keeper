@@ -16,8 +16,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -25,26 +23,14 @@ import android.widget.Toast;
 
 /** Single screen, built in code (no layouts / AndroidX) to keep the APK tiny. */
 public class MainActivity extends Activity implements View.OnClickListener,
-        CompoundButton.OnCheckedChangeListener, RadioGroup.OnCheckedChangeListener {
+        CompoundButton.OnCheckedChangeListener {
 
-    /** OEM "autostart" screens ("package/class"), tried in order; falls back to App info. */
-    private static final String[] AUTOSTART_SCREENS = {
-            "com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity",
-            "com.coloros.safecenter/.permission.startup.StartupAppListActivity",
-            "com.coloros.safecenter/.startupapp.StartupAppListActivity",
-            "com.oplus.safecenter/.permission.startup.StartupAppListActivity",
-            "com.oppo.safe/.permission.startup.StartupAppListActivity",
-            "com.vivo.permissionmanager/.activity.BgStartUpManagerActivity",
-            "com.iqoo.secure/.ui.phoneoptimize.BgStartUpManager",
-    };
-
-    // Outside the radio ids (5..30 = minutes).
-    private static final int BTN_CHECK = 101, BTN_WRITE_SETTINGS = 102, BTN_BATTERY = 103,
-            BTN_AUTOSTART = 104, BTN_GMS = 105, BTN_DONATE = 106;
+    private static final int BTN_CHECK = 1, BTN_BATTERY = 2, BTN_AUTOSTART = 3, BTN_ROM = 4,
+            BTN_DONATE = 5;
 
     private static final String DONATE_URL = "https://ko-fi.com/quangtrang1111/?hidefeed=true&widget=true&embed=true";
 
-    private TextView status;
+    private TextView headline, status;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -57,9 +43,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
 
         TextView title = text(root, "Noti Keeper", 22);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        text(root, "Helps notifications arrive on time without running in the background. "
-                + "Every few minutes it checks Google Play Services' push connection; on Xiaomi "
-                + "HyperOS China it also keeps Google Play Services from being frozen.", 13);
+        text(root, Rom.ABOUT, 13);
 
         Switch enabled = new Switch(this);
         enabled.setText("Enabled");
@@ -69,31 +53,15 @@ public class MainActivity extends Activity implements View.OnClickListener,
         enabled.setOnCheckedChangeListener(this);
         root.addView(enabled);
 
-        text(root, "Check every:", 14);
-        RadioGroup group = new RadioGroup(this);
-        group.setOrientation(RadioGroup.HORIZONTAL);
-        int current = KeepAlive.intervalMin(this);
-        for (int m : KeepAlive.INTERVALS_MIN) {
-            RadioButton rb = new RadioButton(this);
-            rb.setId(m);
-            rb.setText(m + "m");
-            rb.setChecked(m == current);
-            group.addView(rb);
-        }
-        group.setOnCheckedChangeListener(this);
-        root.addView(group);
-
+        headline = text(root, "", 16);
         status = text(root, "", 13);
         status.setPadding(0, dp(8), 0, dp(8));
 
         button(root, BTN_CHECK, "Check now");
-        button(root, BTN_BATTERY, "Battery: don't optimize this app");
-        button(root, BTN_AUTOSTART, "Autostart settings (Xiaomi / Oppo / vivo)");
-        if (XiaomiGuard.check(this, false) != XiaomiGuard.NOT_APPLICABLE) {
-            button(root, BTN_WRITE_SETTINGS, "Xiaomi: allow \"Modify system settings\"");
-        }
-        // Oppo / vivo: the user must set GMS battery to unrestricted by hand.
-        button(root, BTN_GMS, "GPS: battery & autostart (Oppo / vivo)");
+        button(root, BTN_BATTERY, "Battery: allow running on time");
+        button(root, BTN_AUTOSTART, "Autostart settings");
+        String romButton = Rom.setupButton(this);
+        if (romButton != null) button(root, BTN_ROM, romButton);
         Button donate = button(root, BTN_DONATE, "Love this app? Buy me a coffee!");
         donate.setBackgroundTintList(ColorStateList.valueOf(0xFFFF5E5B));
         donate.setTextColor(Color.WHITE);
@@ -103,8 +71,8 @@ public class MainActivity extends Activity implements View.OnClickListener,
         scroll.addView(root);
         setContentView(scroll);
 
-        // Re-arm the alarm, e.g. after a force-stop.
-        KeepAlive.schedule(this);
+        // Re-arm, e.g. after a force-stop.
+        KeepAlive.arm(this);
     }
 
     @Override
@@ -123,8 +91,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
     @Override
     protected void onResume() {
         super.onResume();
-        // Also repairs right after the user grants "Modify system settings".
-        if (XiaomiGuard.IS_XIAOMI) KeepAlive.ping(this, false);
+        Rom.onOpen(this);
         refresh();
     }
 
@@ -135,9 +102,6 @@ public class MainActivity extends Activity implements View.OnClickListener,
                 KeepAlive.ping(this, true);
                 refresh();
                 break;
-            case BTN_WRITE_SETTINGS:
-                open(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, pkgUri(getPackageName())));
-                break;
             case BTN_BATTERY:
                 if (!tryStart(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
                         pkgUri(getPackageName())))) {
@@ -145,13 +109,13 @@ public class MainActivity extends Activity implements View.OnClickListener,
                 }
                 break;
             case BTN_AUTOSTART:
-                for (String screen : AUTOSTART_SCREENS) {
+                for (String screen : Rom.AUTOSTART_SCREENS) {
                     if (tryStart(new Intent().setComponent(ComponentName.unflattenFromString(screen)))) return;
                 }
                 open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri(getPackageName())));
                 break;
-            case BTN_GMS:
-                open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkgUri(KeepAlive.GMS)));
+            case BTN_ROM:
+                open(Rom.setupIntent(this));
                 break;
             case BTN_DONATE:
                 open(new Intent(Intent.ACTION_VIEW, Uri.parse(DONATE_URL)));
@@ -166,22 +130,17 @@ public class MainActivity extends Activity implements View.OnClickListener,
         refresh();
     }
 
-    /** Interval radio group; button ids are the minutes. */
-    @Override
-    public void onCheckedChanged(RadioGroup g, int id) {
-        KeepAlive.setInterval(this, id);
-        refresh();
-    }
-
     private void refresh() {
         SharedPreferences p = KeepAlive.prefs(this);
         long next = p.getLong("nextWall", 0);
         long last = p.getLong("lastPing", 0);
-        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        headline.setText(KeepAlive.isEnabled(this) && next > 0
+                ? "Keeping your notifications on time. Next check: " + DateFormat.format("HH:mm", next)
+                : "Paused");
 
-        StringBuilder s = new StringBuilder("Next check: ")
-                .append(KeepAlive.isEnabled(this) && next > 0 ? DateFormat.format("HH:mm:ss", next) : "off")
-                .append("\nLast check: ").append(last > 0 ? DateFormat.format("HH:mm:ss", last) : "never")
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        StringBuilder s = new StringBuilder("Last check: ")
+                .append(last > 0 ? DateFormat.format("HH:mm:ss", last) : "never")
                 .append("\nBattery optimization: ").append(pm.isIgnoringBatteryOptimizations(getPackageName())
                         ? "off (good)" : "ON (ROM may delay checks)")
                 .append("\nGoogle Play Services: ");
@@ -190,17 +149,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
         } catch (Exception e) {
             s.append("NOT INSTALLED (this app cannot help)");
         }
-        switch (XiaomiGuard.check(this, false)) {
-            case XiaomiGuard.PROTECTED:
-                s.append("\nHyperOS no-freeze list: GMS protected");
-                break;
-            case XiaomiGuard.MISSING:
-                s.append("\nHyperOS no-freeze list: GMS missing (fixed on next check)");
-                break;
-            case XiaomiGuard.NEEDS_PERMISSION:
-                s.append("\nHyperOS no-freeze list: GMS missing, allow \"Modify system settings\"");
-                break;
-        }
+        Rom.status(this, s);
         status.setText(s);
     }
 
@@ -217,7 +166,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
         }
     }
 
-    private static Uri pkgUri(String pkg) {
+    static Uri pkgUri(String pkg) {
         return Uri.parse("package:" + pkg);
     }
 

@@ -13,27 +13,33 @@ shared push channel (FCM) alive.
 
 - **Built for Chinese ROMs.** It includes a dedicated fix for HyperOS China's GMS freezer and
   shortcuts to the hidden battery and autostart screens on Xiaomi, Oppo and vivo.
-- **Super light.** < 13 KB, with no libraries and no AndroidX.
+- **Super light.** About 13 KB, with no libraries and no AndroidX. Each ROM gets its own build,
+  so your phone only carries the code it needs.
 - **0 MB RAM between checks.** There's no background service and no persistent notification.
   The app wakes up for a moment, does its check and exits itself.
-- **Almost no battery.** It sets one alarm every few minutes and runs for a few milliseconds each
-  time. On HyperOS China it even skips the radio wake-up once Google Play Services is protected.
+- **Almost no battery.** On HyperOS China, Android itself wakes the app only when the freeze list
+  changes. Elsewhere, the check interval adapts to charging, battery level and network.
+- **Nothing to configure.** No interval to pick: the app shows when it will check next.
 - **Private by design.** It has no internet permission, collects nothing and shows no ads.
-- **Open source and transparent.** All the code is here, in four small Java files you can read in
-  a few minutes. Build the APK yourself and you know exactly what runs on your phone: no hidden
+- **Open source and transparent.** All the code is here, in a handful of small Java files you can
+  read in a few minutes. Build the APK yourself and you know exactly what runs on your phone: no hidden
   trackers, no obfuscated SDKs and no surprises.
 
-## Supported ROMs
+## Which APK do I need?
 
-| ROM | What Noti Keeper does |
-|---|---|
-| **Xiaomi HyperOS / MIUI China** (Xiaomi, Redmi, POCO) | Keeps Google Play Services off the freeze list automatically, plus push checks |
-| **Xiaomi HyperOS / MIUI Global** | Push checks and the autostart shortcut |
-| **Oppo ColorOS / OnePlus / realme** | Push checks, autostart shortcut and Google Play Services battery shortcut |
-| **vivo OriginOS / Funtouch OS / iQOO** | Push checks, autostart shortcut and Google Play Services battery shortcut |
-| **Other Android 7.0+ phones** | Push checks |
+Each [release](../../releases) has two APKs. Pick the one for your phone:
 
-Google Play Services must be installed.
+| Your phone | APK | What it does |
+|---|---|---|
+| **Xiaomi HyperOS / MIUI China** (Xiaomi, Redmi, POCO) | `NotiKeeper-xiaomi-vX.Y.apk` | Keeps Google Play Services off the freeze list within ~1 s, plus a push check every 30 min |
+| **Xiaomi HyperOS / MIUI Global** | `NotiKeeper-universal-vX.Y.apk` | Push checks and the autostart shortcut |
+| **Oppo ColorOS / OnePlus / realme** | `NotiKeeper-universal-vX.Y.apk` | Push checks, autostart and Google Play Services battery shortcuts |
+| **vivo OriginOS / Funtouch OS / iQOO** | `NotiKeeper-universal-vX.Y.apk` | Push checks, autostart and Google Play Services battery shortcuts |
+| **Honor and other Android 7.0+ phones** | `NotiKeeper-universal-vX.Y.apk` | Push checks |
+
+Not sure? Install the Xiaomi APK on a Xiaomi phone: if your ROM has no freeze list, the app tells
+you to switch to the Universal one. Both builds share the same app ID, so uninstall one before
+installing the other. Google Play Services must be installed.
 
 ## How it works
 
@@ -41,8 +47,7 @@ Google Play Services keeps one connection to `mtalk.google.com:5228` for all FCM
 sends a heartbeat about every 28–30 minutes. Chinese ROMs and many carrier networks drop that
 connection silently before then, so messages wait on Google's side until something reconnects.
 
-Every 5, 10, 15, 20 or 30 minutes (you choose), an alarm wakes the app, which sends these
-broadcasts to Google Play Services. GMS registers receivers for them without requiring a permission.
+An alarm regularly wakes the app, which sends these broadcasts to Google Play Services. GMS registers receivers for them without requiring a permission.
 
 | Broadcast | Effect (verified on GMS 26.34) |
 |---|---|
@@ -52,39 +57,56 @@ broadcasts to Google Play Services. GMS registers receivers for them without req
 
 A heartbeat over a dead connection fails, so GMS notices and reconnects right away.
 
-### Xiaomi HyperOS China: the no-freeze list
+### Universal build: automatic interval
+
+Each heartbeat briefly wakes the mobile radio, so the app picks the interval at every check:
+
+| Phone state | Next check in |
+|---|---|
+| Charging | 5 min |
+| Battery saver on, or battery below 15% | 30 min |
+| Mobile data | 10 min (carriers drop idle connections sooner) |
+| Wi‑Fi | 15 min |
+
+### Xiaomi build: the no-freeze list
 
 HyperOS China freezes Google Play Services about 10 seconds after the screen turns off, which
 kills the push connection. A frozen process can't be helped by pings. Apps listed in the hidden
 setting `Settings.System.MILLET_NO_RESTRICT_APP` are never frozen, but PowerKeeper rebuilds that
 list (at boot, on cloud config updates and on any battery setting change) and drops GMS.
 
-Noti Keeper re-adds GMS to that list on every check, at boot and whenever you open the app. Once
-GMS is protected, its own heartbeat keeps the connection alive, so Noti Keeper skips the extra
-heartbeat to save battery.
+Noti Keeper asks Android's JobScheduler to run it whenever that setting changes (a content
+trigger), so it re-adds GMS within about a second without any process waiting in the background.
+A 30-minute alarm is the backup: it re-checks the list and sends `GCM_RECONNECT`. Once GMS is
+protected, its own heartbeat keeps the connection alive, so Noti Keeper skips the extra heartbeat
+to save battery.
 
 Oppo, vivo and other brands have no writable equivalent of this list. On those phones you set
-Google Play Services' battery to Unrestricted by hand, and the app opens that screen for you.
+Google Play Services' battery to Unrestricted by hand, and the Universal app opens that screen for
+you.
 
 ## Install and set up
 
-1. Download the APK from [Releases](../../releases), install it and open it once. If you get
-   **"Couldn't install (-29)"**, see [Installing on Android 14+](#installing-on-android-14).
-2. Tap **Battery: don't optimize this app**.
+1. Download [the right APK](#which-apk-do-i-need) from [Releases](../../releases), install it and
+   open it once. If the Xiaomi APK fails with **"Couldn't install (-29)"**, see
+   [Installing on Android 14+](#installing-on-android-14).
+2. Tap **Battery: allow running on time** and allow it.
 3. Tap **Autostart settings** and enable Noti Keeper. Also lock it in Recents if your ROM
    supports it, because a cleared or frozen app loses its alarms on Chinese ROMs.
-4. **Xiaomi China ROM:** tap **Xiaomi: allow "Modify system settings"**. The status should then
-   show "HyperOS no-freeze list: GMS protected".
-5. **Oppo / vivo:** tap **GPS: battery & autostart** and set Google Play Services to
+4. **Xiaomi build:** tap **Allow "Modify system settings"**. The status should then show
+   "HyperOS no-freeze list: GMS protected".
+5. **Universal build:** tap **Google Play Services: battery & autostart** and set it to
    Unrestricted / allow background activity / allow auto launch.
 
-The status shows the last and next check. Dial `*#*#426#*#*` to see whether the push connection
+The app shows "Keeping your notifications on time. Next check: …" plus the last check. Dial `*#*#426#*#*` to see whether the push connection
 stays up.
 
 ### Installing on Android 14+
 
-The app targets Android 5.1 (`targetSdk 22`) on purpose: it's the only way Android allows a normal
-app to write the HyperOS no-freeze list. Android 14 and newer block installing apps that target
+This section is only for the **Xiaomi build**; the Universal build installs normally.
+
+The Xiaomi build targets Android 5.1 (`targetSdk 22`) on purpose: it's the only way Android allows
+a normal app to write the HyperOS no-freeze list. Android 14 and newer block installing apps that target
 below Android 6.0, so depending on your ROM you may see **"Couldn't install (-29)"** or
 "Installation package isn't compatible with system". Some ROMs (for example some HyperOS 3 builds)
 allow it; others (for example some HyperOS 2 builds) don't.
@@ -99,7 +121,7 @@ Install every **update** the same way; your settings are kept.
 2. Connect the phone and run:
 
    ```sh
-   adb install --bypass-low-target-sdk-block NotiKeeper-v1.4.apk
+   adb install --bypass-low-target-sdk-block NotiKeeper-xiaomi-v1.4.apk
    ```
 
 #### Option B: Shizuku (no computer)
@@ -114,7 +136,7 @@ Install every **update** the same way; your settings are kept.
    - Shizuku's `rish` shell in a terminal app such as Termux:
 
      ```sh
-     pm install --bypass-low-target-sdk-block /sdcard/Download/NotiKeeper-v1.4.apk
+     pm install --bypass-low-target-sdk-block /sdcard/Download/NotiKeeper-xiaomi-v1.4.apk
      ```
 
 Noti Keeper doesn't need Shizuku after installing, so it keeps working after a reboot even when
@@ -131,6 +153,7 @@ broadcast). For those apps you still need to enable Autostart and set Battery to
 
 ```sh
 adb shell dumpsys alarm | grep -A3 dev.trang.notikeeper                       # alarm armed?
+adb shell dumpsys jobscheduler | grep -A5 dev.trang.notikeeper                # Xiaomi build: trigger armed?
 adb shell dumpsys activity service com.google.android.gms/.gcm.GcmService | grep -E "connected|Heartbeat|Client HB"
 ```
 
@@ -139,8 +162,11 @@ adb shell dumpsys activity service com.google.android.gms/.gcm.GcmService | grep
 Requires JDK 17+ and Android SDK 35.
 
 ```sh
-./gradlew assembleRelease     # app/build/outputs/apk/release/app-release.apk
+./gradlew assembleRelease     # app/build/outputs/apk/{xiaomi,universal}/release/app-*-release.apk
 ```
+
+Shared code is in `app/src/main`. Each build's ROM logic is in `app/src/xiaomi` or
+`app/src/universal`, behind a `Rom` class with the same members in both.
 
 Local builds are signed with your debug key. Official APKs on [Releases](../../releases) are built
 and signed by GitHub Actions when a new `versionName` is merged into `main`.
