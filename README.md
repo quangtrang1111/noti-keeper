@@ -68,7 +68,8 @@ Google Play Services' battery to Unrestricted by hand, and the app opens that sc
 
 ## Install and set up
 
-1. Download the APK from [Releases](../../releases), install it and open it once.
+1. Download the APK from [Releases](../../releases), install it and open it once. If you get
+   **"Couldn't install (-29)"**, see [Installing on Android 14+](#installing-on-android-14).
 2. Tap **Battery: don't optimize this app**.
 3. Tap **Autostart settings** and enable Noti Keeper. Also lock it in Recents if your ROM
    supports it, because a cleared or frozen app loses its alarms on Chinese ROMs.
@@ -80,15 +81,44 @@ Google Play Services' battery to Unrestricted by hand, and the app opens that sc
 The status shows the last and next check. Dial `*#*#426#*#*` to see whether the push connection
 stays up.
 
-### "Built for an older version of Android"
+### Installing on Android 14+
 
-The app targets Android 5.1 (`targetSdk 22`) on purpose: it's the only way Android allows writing
-the HyperOS no-freeze list. Because of that, you may see a one-time warning. HyperOS installs it
-normally. If your phone refuses to install it (some Android 14+ ROMs), use ADB:
+The app targets Android 5.1 (`targetSdk 22`) on purpose: it's the only way Android allows a normal
+app to write the HyperOS no-freeze list. Android 14 and newer block installing apps that target
+below Android 6.0, so depending on your ROM you may see **"Couldn't install (-29)"** or
+"Installation package isn't compatible with system". Some ROMs (for example some HyperOS 3 builds)
+allow it; others (for example some HyperOS 2 builds) don't.
 
-```sh
-adb install --bypass-low-target-sdk-block app-release.apk
-```
+This only blocks installing. Once installed with one of the methods below, the app works normally.
+Install every **update** the same way; your settings are kept.
+
+#### Option A: ADB (with a computer)
+
+1. On the phone, enable **Developer options**, then turn on **USB debugging**.
+   On Xiaomi, also turn on **Install via USB** (it may ask you to sign in to a Mi account).
+2. Connect the phone and run:
+
+   ```sh
+   adb install --bypass-low-target-sdk-block NotiKeeper-v1.4.apk
+   ```
+
+#### Option B: Shizuku (no computer)
+
+1. Install [Shizuku](https://shizuku.rikka.app/) and start it with **Wireless debugging**
+   (Wi‑Fi required; the app guides you through pairing). On Xiaomi, also turn on
+   **Install via USB** in Developer options.
+2. Install the APK with either:
+   - a Shizuku-based installer such as
+     [Install With Options](https://github.com/zacharee/InstallWithOptions): grant it Shizuku
+     access, pick the APK, enable the option to bypass the low target SDK block and install; or
+   - Shizuku's `rish` shell in a terminal app such as Termux:
+
+     ```sh
+     pm install --bypass-low-target-sdk-block /sdcard/Download/NotiKeeper-v1.4.apk
+     ```
+
+Noti Keeper doesn't need Shizuku after installing, so it keeps working after a reboot even when
+Shizuku is stopped.
 
 ## What it doesn't fix
 
