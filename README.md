@@ -101,6 +101,11 @@ Then tap the numbered buttons in order, once:
      "HyperOS no-freeze list: GMS protected".
    - **Universal build: Google Play Services: battery & autostart**: set it to Unrestricted /
      allow background activity / allow auto launch.
+4. **Universal build:** for each app you need notifications from (Zalo, Messenger, your bank…),
+   allow background activity and autostart, then **lock it in Recents and don't swipe it away**.
+   On vivo, Oppo, Honor and similar ROMs, swiping an app away freezes it. Google Play Services
+   still receives its messages, but can't wake the app to show them until you open it again.
+   See [What it doesn't fix](#what-it-doesnt-fix).
 
 The app shows "Keeping your notifications on time. Next check: …" plus the last check. Dial `*#*#426#*#*` to see whether the push connection
 stays up.

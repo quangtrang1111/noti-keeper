@@ -24,6 +24,12 @@ final class Rom {
             "com.hihonor.systemmanager/.startupmgr.ui.StartupNormalAppListActivity",
     };
 
+    /** Shown below the setup buttons. */
+    static final String SETUP_NOTE = "4. Lock the apps you need notifications from "
+            + "in Recents, and don't swipe them away. When you swipe an app away, your phone freezes it, "
+            + "so it can't receive notifications even though Noti Keeper keeps the connection alive. "
+            + "Also allow background activity and autostart for those apps.";
+
     private Rom() {}
 
     static void arm(Context c, boolean on) {}

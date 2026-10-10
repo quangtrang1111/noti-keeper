@@ -62,6 +62,7 @@ public class MainActivity extends Activity implements View.OnClickListener,
         button(root, BTN_AUTOSTART, "2. Autostart settings");
         String romButton = Rom.setupButton(this);
         if (romButton != null) button(root, BTN_ROM, romButton);
+        if (Rom.SETUP_NOTE != null) text(root, Rom.SETUP_NOTE, 13).setPadding(0, dp(8), 0, dp(8));
         Button donate = button(root, BTN_DONATE, "Love this app? Buy me a coffee!");
         donate.setBackgroundTintList(ColorStateList.valueOf(0xFFFF5E5B));
         donate.setTextColor(Color.WHITE);

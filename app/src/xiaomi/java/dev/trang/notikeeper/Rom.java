@@ -13,6 +13,9 @@ final class Rom {
             "com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity",
     };
 
+    /** Shown below the setup buttons; none here. */
+    static final String SETUP_NOTE = null;
+
     private Rom() {}
 
     static void arm(Context c, boolean on) {
